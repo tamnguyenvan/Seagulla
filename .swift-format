@@ -45,7 +45,6 @@
     "ReplaceForEachWithForLoop": false,
     "ReturnVoidInsteadOfEmptyTuple": true,
     "UseEarlyExits": false,
-    "UseExplicitNilComparison": false,
     "UseLetInEveryBoundCaseVariable": false,
     "UseShorthandTypeNames": true,
     "UseSingleLinePropertyGetter": true,

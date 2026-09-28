@@ -63,8 +63,9 @@ make bootstrap
 |---|---|
 | `make bootstrap` | Check tooling, generate the Xcode project |
 | `make build` | Build all package modules |
-| `make test` | Swift tests plus the layering-checker self-test |
-| `make lint` | Layering check, SwiftLint, swift-format |
+| `make test` | Swift tests plus both checker self-tests |
+| `make preflight` | Toolchain-free checks: module graph and formatting |
+| `make lint` | Pre-flight, SwiftLint, swift-format |
 | `make format` | Apply swift-format in place |
 | `make cli` | Run `seagulla-cli` |
 | `make ci` | Everything CI runs, in CI order |

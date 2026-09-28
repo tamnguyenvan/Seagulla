@@ -29,15 +29,21 @@ workflows:
           set -euo pipefail
           brew install xcodegen swiftlint
 
-      - name: Layering checker self-test
+      - name: Checker self-tests
         script: |
           set -euo pipefail
           python3 Scripts/test_check_layering.py
+          python3 Scripts/test_check_formatting.py
 
       - name: Architecture check
         script: |
           set -euo pipefail
           python3 Scripts/check_layering.py
+
+      - name: Formatting pre-flight
+        script: |
+          set -euo pipefail
+          python3 Scripts/check_formatting.py
 
       - name: Build package
         script: |

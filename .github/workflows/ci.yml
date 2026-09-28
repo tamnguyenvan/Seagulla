@@ -10,24 +10,29 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  # Runs without a Swift toolchain, so it reports architecture drift in seconds.
-  architecture:
-    name: Architecture
+  # Runs without a Swift toolchain, so it reports drift in seconds and gates the
+  # expensive macOS job below.
+  preflight:
+    name: Pre-flight
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-      - name: Layering checker self-test
-        run: python3 Scripts/test_check_layering.py
+      - name: Checker self-tests
+        run: |
+          python3 Scripts/test_check_layering.py
+          python3 Scripts/test_check_formatting.py
       - name: Architecture check
         run: python3 Scripts/check_layering.py
+      - name: Formatting pre-flight
+        run: python3 Scripts/check_formatting.py
 
   build:
     name: Build, test and lint
     runs-on: macos-15
-    needs: architecture
+    needs: preflight
     steps:
       - uses: actions/checkout@v4
 
