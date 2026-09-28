@@ -1,0 +1,84 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # Runs without a Swift toolchain, so it reports architecture drift in seconds.
+  architecture:
+    name: Architecture
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Layering checker self-test
+        run: python3 Scripts/test_check_layering.py
+      - name: Architecture check
+        run: python3 Scripts/check_layering.py
+
+  build:
+    name: Build, test and lint
+    runs-on: macos-15
+    needs: architecture
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Select Xcode
+        run: sudo xcode-select -switch /Applications/Xcode_16.app
+
+      - name: Environment
+        run: |
+          xcodebuild -version
+          swift --version
+
+      - name: Install tooling
+        run: brew install xcodegen swiftlint
+
+      - name: Cache SwiftPM
+        uses: actions/cache@v4
+        with:
+          path: .build
+          key: spm-${{ runner.os }}-${{ hashFiles('Package.swift') }}
+          restore-keys: spm-${{ runner.os }}-
+
+      - name: Build package
+        run: swift build --configuration debug -Xswiftc -warnings-as-errors
+
+      - name: Test package
+        run: swift test --configuration debug
+
+      - name: Smoke-test the CLI
+        run: |
+          swift run seagulla-cli modules
+          swift run seagulla-cli version
+
+      - name: SwiftLint
+        run: swiftlint lint --config .swiftlint.yml --strict
+
+      - name: swift-format
+        run: |
+          xcrun swift-format lint --recursive --strict \
+            --configuration .swift-format Sources Tests Seagulla Gallery
+
+      - name: Generate Xcode project
+        run: xcodegen generate --spec project.yml
+
+      - name: Build Seagulla.app
+        run: |
+          xcodebuild -project Seagulla.xcodeproj -scheme Seagulla \
+            -configuration Debug -destination 'platform=macOS' \
+            CODE_SIGNING_ALLOWED=NO build
+
+      - name: Build Gallery.app
+        run: |
+          xcodebuild -project Seagulla.xcodeproj -scheme Gallery \
+            -configuration Debug -destination 'platform=macOS' \
+            CODE_SIGNING_ALLOWED=NO build

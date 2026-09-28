@@ -1,0 +1,102 @@
+# XcodeGen specification for Seagulla.
+#
+# Seagulla.xcodeproj is generated, not committed: pbxproj files conflict badly on every
+# branch merge and are effectively unreviewable. Run `make bootstrap` after cloning.
+#
+# The module graph lives in Package.swift; this file only describes the two app targets
+# and how they link the package products.
+
+name: Seagulla
+
+options:
+  bundleIdPrefix: com.seagulla
+  deploymentTarget:
+    macOS: "15.0"
+  createIntermediateGroups: true
+  groupSortPosition: top
+  xcodeVersion: "16.0"
+
+settings:
+  base:
+    SWIFT_VERSION: "6.0"
+    SWIFT_STRICT_CONCURRENCY: complete
+    GENERATE_INFOPLIST_FILE: YES
+    MARKETING_VERSION: "0.1.0"
+    CURRENT_PROJECT_VERSION: "1"
+    DEAD_CODE_STRIPPING: YES
+    ENABLE_USER_SCRIPT_SANDBOXING: YES
+    CLANG_ENABLE_MODULES: YES
+    ALWAYS_SEARCH_USER_PATHS: NO
+    INFOPLIST_KEY_LSApplicationCategoryType: public.app-category.video
+  configs:
+    Debug:
+      SWIFT_OPTIMIZATION_LEVEL: "-Onone"
+      SWIFT_ACTIVE_COMPILATION_CONDITIONS: DEBUG
+      ONLY_ACTIVE_ARCH: YES
+    Release:
+      SWIFT_OPTIMIZATION_LEVEL: "-O"
+      SWIFT_COMPILATION_MODE: wholemodule
+
+packages:
+  SeagullaCore:
+    path: .
+
+targets:
+  Seagulla:
+    type: application
+    platform: macOS
+    sources:
+      - path: Seagulla
+    dependencies:
+      - package: SeagullaCore
+        product: SeagullaKit
+      - package: SeagullaCore
+        product: DesignSystem
+      - package: SeagullaCore
+        product: PersistenceKit
+      - package: SeagullaCore
+        product: MediaIO
+      - package: SeagullaCore
+        product: MLRuntime
+      - package: SeagullaCore
+        product: ExportKit
+      - package: SeagullaCore
+        product: PlatformKit
+      - package: SeagullaCore
+        product: IngestEngine
+      - package: SeagullaCore
+        product: SearchEngine
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.seagulla.app
+        INFOPLIST_KEY_CFBundleDisplayName: Seagulla
+
+  Gallery:
+    type: application
+    platform: macOS
+    sources:
+      - path: Gallery
+    dependencies:
+      - package: SeagullaCore
+        product: DesignSystem
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.seagulla.gallery
+        INFOPLIST_KEY_CFBundleDisplayName: Seagulla Gallery
+
+schemes:
+  Seagulla:
+    build:
+      targets:
+        Seagulla: all
+    run:
+      config: Debug
+    archive:
+      config: Release
+
+  Gallery:
+    build:
+      targets:
+        Gallery: all
+    run:
+      config: Debug

@@ -33,13 +33,44 @@ and results that are *moments* rather than whole clips.
 - **ML** — Core ML / MLX on-device; `SpeechAnalyzer` (macOS 26+) with whisper.cpp fallback
 - **Distribution** — Direct download, Developer ID + notarized, Sparkle 2 updates
 
+## Module graph
+
+Nine local SwiftPM modules in one package. A target cannot import a module it does not
+declare, so layering is enforced by the compiler; `Scripts/check_layering.py` additionally
+validates the declared graph against [`Scripts/architecture.json`](Scripts/architecture.json)
+so a forbidden dependency fails CI rather than quietly eroding the design.
+
+| Layer | Modules |
+|---|---|
+| 0 — foundation | `SeagullaKit`, `DesignSystem` |
+| 1 — capability | `PersistenceKit`, `MediaIO`, `MLRuntime`, `ExportKit`, `PlatformKit` |
+| 2 — engine | `IngestEngine`, `SearchEngine` |
+| 3 — application | `Seagulla.app`, `Gallery.app`, `seagulla-cli` |
+
 ## Build
 
-Requires Xcode 16+ and an Apple Silicon Mac running macOS 15 or later.
+Requires Xcode 16+ and an Apple Silicon Mac running macOS 15 or later, plus
+`brew install xcodegen swiftlint`.
+
+`Seagulla.xcodeproj` is **generated from [`project.yml`](project.yml)**, not committed —
+pbxproj files conflict on every merge and cannot be reviewed. After cloning:
 
 ```bash
-open Seagulla.xcodeproj
+make bootstrap
 ```
+
+| Command | Does |
+|---|---|
+| `make bootstrap` | Check tooling, generate the Xcode project |
+| `make build` | Build all package modules |
+| `make test` | Swift tests plus the layering-checker self-test |
+| `make lint` | Layering check, SwiftLint, swift-format |
+| `make format` | Apply swift-format in place |
+| `make cli` | Run `seagulla-cli` |
+| `make ci` | Everything CI runs, in CI order |
+
+Four entry points: the **Seagulla** and **Gallery** schemes in Xcode, `seagulla-cli` via
+`make cli`, and the test suites via `make test`.
 
 ## License
 

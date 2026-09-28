@@ -1,0 +1,86 @@
+# Codemagic CI for Seagulla.
+#
+# Steps are ordered cheapest-and-most-deterministic first, so a failure tells you as much
+# as possible as early as possible: architecture checks (no toolchain), then the package
+# build and tests, then lint, then the Xcode app builds.
+
+workflows:
+  ci:
+    name: Seagulla CI
+    instance_type: mac_mini_m2
+    max_build_duration: 60
+    environment:
+      xcode: latest
+    triggering:
+      events:
+        - push
+        - pull_request
+    scripts:
+      - name: Environment
+        script: |
+          set -euo pipefail
+          sw_vers
+          xcodebuild -version
+          swift --version
+          python3 --version
+
+      - name: Install tooling
+        script: |
+          set -euo pipefail
+          brew install xcodegen swiftlint
+
+      - name: Layering checker self-test
+        script: |
+          set -euo pipefail
+          python3 Scripts/test_check_layering.py
+
+      - name: Architecture check
+        script: |
+          set -euo pipefail
+          python3 Scripts/check_layering.py
+
+      - name: Build package
+        script: |
+          set -euo pipefail
+          swift build --configuration debug -Xswiftc -warnings-as-errors
+
+      - name: Test package
+        script: |
+          set -euo pipefail
+          swift test --configuration debug
+
+      - name: Smoke-test the CLI
+        script: |
+          set -euo pipefail
+          swift run seagulla-cli modules
+          swift run seagulla-cli version
+
+      - name: SwiftLint
+        script: |
+          set -euo pipefail
+          swiftlint lint --config .swiftlint.yml --strict
+
+      - name: swift-format
+        script: |
+          set -euo pipefail
+          xcrun swift-format lint --recursive --strict \
+            --configuration .swift-format Sources Tests Seagulla Gallery
+
+      - name: Generate Xcode project
+        script: |
+          set -euo pipefail
+          xcodegen generate --spec project.yml
+
+      - name: Build Seagulla.app
+        script: |
+          set -euo pipefail
+          xcodebuild -project Seagulla.xcodeproj -scheme Seagulla \
+            -configuration Debug -destination 'platform=macOS' \
+            CODE_SIGNING_ALLOWED=NO build
+
+      - name: Build Gallery.app
+        script: |
+          set -euo pipefail
+          xcodebuild -project Seagulla.xcodeproj -scheme Gallery \
+            -configuration Debug -destination 'platform=macOS' \
+            CODE_SIGNING_ALLOWED=NO build
