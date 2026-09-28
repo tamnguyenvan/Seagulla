@@ -18,7 +18,14 @@ import json
 import sys
 from pathlib import Path
 
-SOURCE_DIRECTORIES = ("Sources", "Tests", "Seagulla", "Gallery")
+SOURCE_DIRECTORIES = (
+    "Packages/SeagullaCore/Sources",
+    "Packages/SeagullaCore/Tests",
+    "Sources",
+    "Tests",
+    "Seagulla",
+    "Gallery",
+)
 
 
 def configured_line_length(root: Path) -> int:

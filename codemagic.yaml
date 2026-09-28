@@ -48,18 +48,18 @@ workflows:
       - name: Build package
         script: |
           set -euo pipefail
-          swift build --configuration debug -Xswiftc -warnings-as-errors
+          swift build --package-path Packages/SeagullaCore --configuration debug -Xswiftc -warnings-as-errors
 
       - name: Test package
         script: |
           set -euo pipefail
-          swift test --configuration debug
+          swift test --package-path Packages/SeagullaCore --configuration debug
 
       - name: Smoke-test the CLI
         script: |
           set -euo pipefail
-          swift run seagulla-cli modules
-          swift run seagulla-cli version
+          swift run --package-path Packages/SeagullaCore seagulla-cli modules
+          swift run --package-path Packages/SeagullaCore seagulla-cli version
 
       - name: SwiftLint
         script: |
@@ -70,7 +70,8 @@ workflows:
         script: |
           set -euo pipefail
           xcrun swift-format lint --recursive --strict \
-            --configuration .swift-format Sources Tests Seagulla Gallery
+            --configuration .swift-format \
+            Packages/SeagullaCore/Sources Packages/SeagullaCore/Tests Seagulla Gallery
 
       - name: Generate Xcode project
         script: |

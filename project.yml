@@ -39,7 +39,7 @@ settings:
 
 packages:
   SeagullaCore:
-    path: .
+    path: Packages/SeagullaCore
 
 targets:
   Seagulla:

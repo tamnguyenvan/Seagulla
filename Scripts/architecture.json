@@ -1,5 +1,6 @@
 {
   "_comment": "Authoritative module graph for Seagulla. Scripts/check_layering.py validates Package.swift, the Xcode targets and every Swift import against this file. Changing the architecture means changing this file first.",
+  "packageRoot": "Packages/SeagullaCore",
   "layers": [
     { "index": 0, "name": "foundation", "description": "No dependencies on other Seagulla modules." },
     { "index": 1, "name": "capability", "description": "Single-concern services over the domain." },

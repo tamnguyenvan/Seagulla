@@ -50,20 +50,20 @@ jobs:
       - name: Cache SwiftPM
         uses: actions/cache@v4
         with:
-          path: .build
-          key: spm-${{ runner.os }}-${{ hashFiles('Package.swift') }}
+          path: Packages/SeagullaCore/.build
+          key: spm-${{ runner.os }}-${{ hashFiles('Packages/SeagullaCore/Package.swift') }}
           restore-keys: spm-${{ runner.os }}-
 
       - name: Build package
-        run: swift build --configuration debug -Xswiftc -warnings-as-errors
+        run: swift build --package-path Packages/SeagullaCore --configuration debug -Xswiftc -warnings-as-errors
 
       - name: Test package
-        run: swift test --configuration debug
+        run: swift test --package-path Packages/SeagullaCore --configuration debug
 
       - name: Smoke-test the CLI
         run: |
-          swift run seagulla-cli modules
-          swift run seagulla-cli version
+          swift run --package-path Packages/SeagullaCore seagulla-cli modules
+          swift run --package-path Packages/SeagullaCore seagulla-cli version
 
       - name: SwiftLint
         run: swiftlint lint --config .swiftlint.yml --strict
@@ -71,7 +71,8 @@ jobs:
       - name: swift-format
         run: |
           xcrun swift-format lint --recursive --strict \
-            --configuration .swift-format Sources Tests Seagulla Gallery
+            --configuration .swift-format \
+            Packages/SeagullaCore/Sources Packages/SeagullaCore/Tests Seagulla Gallery
 
       - name: Generate Xcode project
         run: xcodegen generate --spec project.yml

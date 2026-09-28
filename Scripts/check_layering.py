@@ -94,13 +94,17 @@ def swift_imports(directory: Path, known: set[str]) -> dict[Path, set[str]]:
 def main() -> int:
     root = Path(__file__).resolve().parent.parent
     manifest_path = root / "Scripts" / "architecture.json"
-    package_path = root / "Package.swift"
-
-    if not manifest_path.exists() or not package_path.exists():
+    if not manifest_path.exists():
         print("error: run from a Seagulla checkout", file=sys.stderr)
         return 2
 
     manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    package_root = root / manifest.get("packageRoot", ".")
+    package_path = package_root / "Package.swift"
+
+    if not package_path.exists():
+        print(f"error: no Package.swift at {package_path}", file=sys.stderr)
+        return 2
     modules: dict[str, dict] = manifest["modules"]
     app_targets: dict[str, dict] = manifest["appTargets"]
     known = set(modules)
@@ -134,7 +138,7 @@ def main() -> int:
 
     # 2 + 4. Imports are declared; Swift layer constants match the manifest.
     for name, spec in modules.items():
-        source_dir = root / "Sources" / name
+        source_dir = package_root / "Sources" / name
         allowed = set(spec["dependencies"])
 
         for path, imported in swift_imports(source_dir, known).items():

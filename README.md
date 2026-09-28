@@ -33,6 +33,19 @@ and results that are *moments* rather than whole clips.
 - **ML** — Core ML / MLX on-device; `SpeechAnalyzer` (macOS 26+) with whisper.cpp fallback
 - **Distribution** — Direct download, Developer ID + notarized, Sparkle 2 updates
 
+## Layout
+
+```
+Packages/SeagullaCore/   SwiftPM package — all nine modules and their tests
+Seagulla/                Seagulla.app sources
+Gallery/                 Gallery.app sources (design-system catalogue)
+Scripts/                 Architecture manifest and toolchain-free checks
+project.yml              XcodeGen spec for the two app targets
+```
+
+The package lives in a subdirectory because Xcode cannot reference a local package
+whose directory contains the `.xcodeproj`.
+
 ## Module graph
 
 Nine local SwiftPM modules in one package. A target cannot import a module it does not

@@ -2,7 +2,8 @@
 #
 # Run `make bootstrap` after cloning: Seagulla.xcodeproj is generated, not committed.
 
-SWIFT_SOURCES := Sources Tests Seagulla Gallery
+PACKAGE := Packages/SeagullaCore
+SWIFT_SOURCES := $(PACKAGE)/Sources $(PACKAGE)/Tests Seagulla Gallery
 XCODEPROJ := Seagulla.xcodeproj
 
 .DEFAULT_GOAL := help
@@ -24,10 +25,10 @@ xcode: ## Generate the Xcode project from project.yml
 	xcodegen generate --spec project.yml
 
 build: ## Build all package modules
-	swift build --configuration debug
+	swift build --package-path $(PACKAGE) --configuration debug
 
 test: ## Run Swift and Python test suites
-	swift test --configuration debug
+	swift test --package-path $(PACKAGE) --configuration debug
 	python3 Scripts/test_check_layering.py
 	python3 Scripts/test_check_formatting.py
 
@@ -52,10 +53,10 @@ gallery: xcode ## Build the design-system gallery
 	xcodebuild -project $(XCODEPROJ) -scheme Gallery -configuration Debug CODE_SIGNING_ALLOWED=NO build
 
 cli: ## Run seagulla-cli
-	swift run seagulla-cli
+	swift run --package-path $(PACKAGE) seagulla-cli
 
 ci: preflight test build lint app gallery ## Everything CI runs, in CI order
 
 clean: ## Remove build artifacts
-	swift package clean
-	rm -rf .build DerivedData $(XCODEPROJ)
+	swift package --package-path $(PACKAGE) clean
+	rm -rf $(PACKAGE)/.build DerivedData $(XCODEPROJ)
