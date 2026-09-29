@@ -16,6 +16,9 @@ build/
 src-tauri/target/
 src-tauri/gen/
 
+# App icons are build inputs, not artifacts
+!src-tauri/icons/
+
 # Generated types
 src/lib/ipc/generated/
 

@@ -34,27 +34,44 @@ it is the only way to use the product daily during development.
 
 ## Running it
 
-The UI runs in a plain browser with a TypeScript mock backend — no Rust, no Tauri, no macOS.
-That is the development loop on Linux.
+Seagulla is a **desktop app**. `pnpm tauri dev` opens a real window.
+
+### First time
 
 ```bash
+# Rust toolchain (user-local, no sudo)
+curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+source "$HOME/.cargo/env"
+
+# Tauri's Linux dependencies (Ubuntu/Debian)
+sudo apt install -y libwebkit2gtk-4.1-dev libjavascriptcoregtk-4.1-dev \
+  libsoup-3.0-dev build-essential curl file libssl-dev libayatana-appindicator3-dev \
+  librsvg2-dev patchelf
+
 pnpm install
-pnpm dev          # http://localhost:5173
 ```
 
-`/gallery` shows every component in every state, both themes.
+### Every time
 
-With the Rust toolchain installed, `pnpm tauri dev` runs the real shell; the backend selector
-in `src/lib/ipc/index.ts` switches from the mock to the Tauri bridge automatically.
+```bash
+pnpm tauri dev      # desktop window, hot reload
+```
 
 | Command | Does |
 |---|---|
-| `pnpm dev` | UI in a browser, against mocks |
+| `pnpm tauri dev` | **The app.** Desktop window with hot reload. |
+| `pnpm tauri build` | Packaged binary — `.deb`/AppImage on Linux, `.app`/`.dmg` on macOS |
+| `pnpm dev` | UI only, in a browser at `:5173` — faster loop for pure frontend work |
 | `pnpm check` | Svelte + TypeScript typecheck |
-| `pnpm test` | Unit tests (timecode, masonry, mock physics, reorder gate) |
-| `pnpm build` | Static bundle |
-| `pnpm tauri dev` | Full app, needs Rust |
+| `pnpm test` | Frontend unit tests |
+| `cargo test --workspace` | Rust tests |
 | `python3 scripts/check_layering.py` | Validate the crate graph |
+
+Both entry points run the same UI. In a browser it uses the TypeScript mock backend; in the
+desktop window it will use the Tauri bridge once the Rust engines land — the selector in
+`src/lib/ipc/index.ts` chooses automatically.
+
+`/gallery` shows every component in every state, both themes.
 
 ## Layout
 
