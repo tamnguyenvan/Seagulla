@@ -27,13 +27,13 @@ Two claims must hold to beat the free search built into every modern NLE:
 This is not a minor inconvenience. It rules out the entire Apple-framework approach that the
 previous plan rested on:
 
-| Previously planned | Problem | Replacement |
-|---|---|---|
-| SwiftUI | Cannot build or run on Linux | **Tauri 2 + SvelteKit** |
-| AVFoundation / VideoToolbox | macOS-only | **FFmpeg** (`ffmpeg-next`), with VideoToolbox as a macOS hwaccel |
-| Core ML / MLX | macOS-only | **ONNX Runtime** (`ort`), with Core ML as a macOS execution provider |
-| `SpeechAnalyzer` (macOS 26) | Swift-only, macOS-only | **whisper.cpp** (`whisper-rs`), Metal on macOS, CPU/CUDA on Linux |
-| Vision OCR | macOS-only | ONNX OCR (PaddleOCR export), deferred past v1 |
+| Previously planned          | Problem                      | Replacement                                                          |
+| --------------------------- | ---------------------------- | -------------------------------------------------------------------- |
+| SwiftUI                     | Cannot build or run on Linux | **Tauri 2 + SvelteKit**                                              |
+| AVFoundation / VideoToolbox | macOS-only                   | **FFmpeg** (`ffmpeg-next`), with VideoToolbox as a macOS hwaccel     |
+| Core ML / MLX               | macOS-only                   | **ONNX Runtime** (`ort`), with Core ML as a macOS execution provider |
+| `SpeechAnalyzer` (macOS 26) | Swift-only, macOS-only       | **whisper.cpp** (`whisper-rs`), Metal on macOS, CPU/CUDA on Linux    |
+| Vision OCR                  | macOS-only                   | ONNX OCR (PaddleOCR export), deferred past v1                        |
 
 The principle: **every capability has a cross-platform implementation that runs on Linux, and
 platform acceleration is an optional trait implementation selected at runtime.** You develop and
@@ -44,8 +44,8 @@ Two consequences worth stating plainly.
 **You cannot dogfood your own product.** For a tool sold on taste to professional editors, that
 is a genuine handicap. The mitigation is that the cross-platform core makes a **Linux build
 nearly free** — and shipping it means you use the thing you sell. The market research argued for
-macOS-first on commercial grounds, and that still holds for *marketing*; it does not require a
-macOS-only *codebase*.
+macOS-first on commercial grounds, and that still holds for _marketing_; it does not require a
+macOS-only _codebase_.
 
 **macOS window chrome cannot be seen locally.** Vibrancy, traffic lights and native materials
 render only on macOS. See [`macos-native-in-tauri.md`](macos-native-in-tauri.md) for what that
@@ -55,19 +55,19 @@ costs and how to keep the loop tight.
 
 ## 2. Stack
 
-| Layer | Choice | Why |
-|---|---|---|
-| Shell | **Tauri 2** | Rust core, system webview, small binaries, real native window control |
-| Frontend | **SvelteKit** + `adapter-static`, SSR off | Compiles away; least runtime overhead of the major frameworks, which matters for the grid |
-| Styling | **Tailwind CSS v4** | Token-first, and the design system in `ui-ux-spec.md` is already expressed as tokens |
-| Language | TypeScript, strict | — |
-| Core | **Rust workspace** | One language from decode to search |
-| Database | **SQLite** via `rusqlite` + FTS5 | Same engine as the SwiftUI plan; FTS5 for transcripts and OCR |
-| Vectors | **USearch** (Rust bindings) | HNSW, quantization, and views a large index from disk without loading it into RAM |
-| Decode | **FFmpeg** via `ffmpeg-next` | Cross-platform; hwaccel selected per platform |
-| Inference | **ONNX Runtime** via `ort` | Core ML EP on macOS, CUDA/CPU on Linux, one model artifact |
-| Speech | **whisper.cpp** via `whisper-rs` | Metal / CUDA / CPU from one codebase |
-| Camera RAW | RED SDK, Blackmagic RAW SDK | **Both ship Linux builds** — this survives the platform change |
+| Layer      | Choice                                    | Why                                                                                       |
+| ---------- | ----------------------------------------- | ----------------------------------------------------------------------------------------- |
+| Shell      | **Tauri 2**                               | Rust core, system webview, small binaries, real native window control                     |
+| Frontend   | **SvelteKit** + `adapter-static`, SSR off | Compiles away; least runtime overhead of the major frameworks, which matters for the grid |
+| Styling    | **Tailwind CSS v4**                       | Token-first, and the design system in `ui-ux-spec.md` is already expressed as tokens      |
+| Language   | TypeScript, strict                        | —                                                                                         |
+| Core       | **Rust workspace**                        | One language from decode to search                                                        |
+| Database   | **SQLite** via `rusqlite` + FTS5          | Same engine as the SwiftUI plan; FTS5 for transcripts and OCR                             |
+| Vectors    | **USearch** (Rust bindings)               | HNSW, quantization, and views a large index from disk without loading it into RAM         |
+| Decode     | **FFmpeg** via `ffmpeg-next`              | Cross-platform; hwaccel selected per platform                                             |
+| Inference  | **ONNX Runtime** via `ort`                | Core ML EP on macOS, CUDA/CPU on Linux, one model artifact                                |
+| Speech     | **whisper.cpp** via `whisper-rs`          | Metal / CUDA / CPU from one codebase                                                      |
+| Camera RAW | RED SDK, Blackmagic RAW SDK               | **Both ship Linux builds** — this survives the platform change                            |
 
 ### 2.1 Crate graph
 
@@ -142,7 +142,7 @@ query → parse → { semantic string, structured filters }
 - **Stage 1** is a bi-encoder exported to ONNX. `Qwen3-VL-Embedding-2B` remains the leading
   candidate — Apache-2.0, native video-text, Matryoshka dimensions 64–2048, so the archive index
   stores small vectors and reranking uses full width. SigLIP-2 is the fallback.
-- **ONNX export is now the risk to validate**, replacing Core ML conversion. It is a *lower*
+- **ONNX export is now the risk to validate**, replacing Core ML conversion. It is a _lower_
   risk: the export path is better travelled and testable on Linux.
 - **Explainability is a feature.** Every result shows what matched. Plausible false positives are
   inevitable; showing evidence converts an error into a legible error, which users forgive.
@@ -185,35 +185,35 @@ specific places where a web UI gives itself away.
 
 ## 7. Risks
 
-| Risk | Severity | Mitigation |
-|---|---|---|
-| Grid cannot hold 60fps at 100k in a webview | **High** | Swappable renderer; canvas/WebGL escape hatch |
-| Cannot see macOS chrome while developing | **High** | Thin native shell, CI screenshots, VNC checks |
-| Cannot dogfood the product | Medium | Ship a Linux build and use it |
-| ONNX export of the stage-1 encoder fails | Medium | Validate in Phase 1; SigLIP-2 fallback |
-| WebKitGTK and WKWebView render differently | Medium | Both are WebKit — far closer than Chromium; verify in CI |
-| FFmpeg licensing (GPL vs LGPL builds) | Medium | Link LGPL build, avoid GPL-only codecs, document |
-| RED/BRAW SDK integration from Rust | Medium | Both ship Linux SDKs; FFI shim crate, start registration early |
-| Scope creep into "AI editor" | High | Search and hand off. Do not build a timeline. |
+| Risk                                        | Severity | Mitigation                                                     |
+| ------------------------------------------- | -------- | -------------------------------------------------------------- |
+| Grid cannot hold 60fps at 100k in a webview | **High** | Swappable renderer; canvas/WebGL escape hatch                  |
+| Cannot see macOS chrome while developing    | **High** | Thin native shell, CI screenshots, VNC checks                  |
+| Cannot dogfood the product                  | Medium   | Ship a Linux build and use it                                  |
+| ONNX export of the stage-1 encoder fails    | Medium   | Validate in Phase 1; SigLIP-2 fallback                         |
+| WebKitGTK and WKWebView render differently  | Medium   | Both are WebKit — far closer than Chromium; verify in CI       |
+| FFmpeg licensing (GPL vs LGPL builds)       | Medium   | Link LGPL build, avoid GPL-only codecs, document               |
+| RED/BRAW SDK integration from Rust          | Medium   | Both ship Linux SDKs; FFI shim crate, start registration early |
+| Scope creep into "AI editor"                | High     | Search and hand off. Do not build a timeline.                  |
 
 ---
 
 ## 8. Roadmap
 
 Build order is unchanged: **UI-first against mock engines**, with the ingest and retrieval gates
-deferred. The mock rule stands — *the mock must lie about content, never about physics*: realistic
+deferred. The mock rule stands — _the mock must lie about content, never about physics_: realistic
 latency, progressive stage-1 → stage-2 results, a 2% failure rate, and a 100k-moment fixture
 library from the first commit.
 
-| Phase | Name | Gate |
-|---|---|---|
-| 1 | Foundation: workspace, crates, mocks, design tokens | Component gallery renders every state |
-| 2 | App shell on mocks | **60fps on 100k fixtures** |
-| 3 | Workflow + chrome: exports, settings, shortcuts, updater | Demoable; run customer interviews |
-| 4 | Real ingest | **≥5× realtime on mixed codecs** |
-| 5 | Real retrieval | **Two-stage lift obvious to a stranger** |
-| 6 | Archive scale: offline volumes, dedupe, model migration | 40TB library usable |
-| 7 | Ship: notarization, updater, private beta | Signed build, 10 beta facilities |
+| Phase | Name                                                     | Gate                                     |
+| ----- | -------------------------------------------------------- | ---------------------------------------- |
+| 1     | Foundation: workspace, crates, mocks, design tokens      | Component gallery renders every state    |
+| 2     | App shell on mocks                                       | **60fps on 100k fixtures**               |
+| 3     | Workflow + chrome: exports, settings, shortcuts, updater | Demoable; run customer interviews        |
+| 4     | Real ingest                                              | **≥5× realtime on mixed codecs**         |
+| 5     | Real retrieval                                           | **Two-stage lift obvious to a stranger** |
+| 6     | Archive scale: offline volumes, dedupe, model migration  | 40TB library usable                      |
+| 7     | Ship: notarization, updater, private beta                | Signed build, 10 beta facilities         |
 
 Task-level breakdown in [`execution-plan.md`](execution-plan.md).
 

@@ -4,7 +4,7 @@ Research notes and the decisions taken for Seagulla. Companion to
 [`ui-ux-spec.md`](ui-ux-spec.md), which owns the visual design.
 
 **The honest framing.** A Tauri app is a native process wrapping a system webview. The window,
-menus, traffic lights and materials are genuinely native and cost little. Everything *inside* the
+menus, traffic lights and materials are genuinely native and cost little. Everything _inside_ the
 window is a web page, and that is where apps give themselves away. The gap is closed by a long
 tail of small, specific details — not by a component library.
 
@@ -61,7 +61,9 @@ when the sidebar collapses.
 **Reserve the space in CSS**, or your sidebar content collides with the buttons:
 
 ```css
-.sidebar-top { padding-top: 28px; }  /* clears the traffic lights */
+.sidebar-top {
+  padding-top: 28px;
+} /* clears the traffic lights */
 ```
 
 ### 1.3 Drag regions
@@ -75,7 +77,10 @@ Any element can become draggable:
 Interactive children inside a drag region must opt out, or clicks get swallowed:
 
 ```css
-.toolbar button, .toolbar input { -webkit-app-region: no-drag; }
+.toolbar button,
+.toolbar input {
+  -webkit-app-region: no-drag;
+}
 ```
 
 ---
@@ -103,11 +108,11 @@ Materials worth knowing: `Sidebar`, `HeaderView`, `HudWindow`, `UnderWindowBackg
 
 Seagulla's mapping, per `ui-ux-spec.md` §2:
 
-| Surface | Material |
-|---|---|
-| Sidebar | `Sidebar` |
-| Throughput HUD pill | `HudWindow` |
-| Content area | **none — opaque** |
+| Surface             | Material          |
+| ------------------- | ----------------- |
+| Sidebar             | `Sidebar`         |
+| Throughput HUD pill | `HudWindow`       |
+| Content area        | **none — opaque** |
 
 The content area stays opaque deliberately. Thumbnails need a stable background for accurate
 colour judgement, and translucency behind a dense image grid reads as noise rather than depth.
@@ -115,8 +120,13 @@ colour judgement, and translucency behind a dense image grid reads as noise rath
 **The webview must be see-through for any of this to show.** With Tailwind:
 
 ```css
-html, body { background: transparent; }
-.content-pane { background: var(--canvas); }  /* opaque again, on purpose */
+html,
+body {
+  background: transparent;
+}
+.content-pane {
+  background: var(--canvas);
+} /* opaque again, on purpose */
 ```
 
 **Respect the system setting.** Reduce Transparency must fall back to opaque. Read it via
@@ -131,14 +141,18 @@ macOS UI is smaller and tighter than the web default. This is the cheapest large
 
 ```css
 :root {
-  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, sans-serif;
-  font-size: 13px;               /* macOS body size, not 16px */
+  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', system-ui, sans-serif;
+  font-size: 13px; /* macOS body size, not 16px */
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
 }
 
-.tabular { font-variant-numeric: tabular-nums; }
-.mono    { font-family: ui-monospace, "SF Mono", Menlo, monospace; }
+.tabular {
+  font-variant-numeric: tabular-nums;
+}
+.mono {
+  font-family: ui-monospace, 'SF Mono', Menlo, monospace;
+}
 ```
 
 - `-apple-system` resolves to SF Pro in WKWebView at no download cost, and picks the correct
@@ -154,22 +168,30 @@ macOS UI is smaller and tighter than the web default. This is the cheapest large
 
 Ranked by how quickly a Mac user notices.
 
-| Tell | Fix |
-|---|---|
-| Text selection everywhere | `user-select: none` globally; re-enable on transcripts and fields |
-| Browser focus rings | Custom ring per `ui-ux-spec.md` §1; never leave the default outline |
-| Wrong cursor over UI | `cursor: default`, not `pointer`, on buttons — macOS does not use a hand cursor |
-| Drag-and-drop ghost images | `e.dataTransfer.setDragImage()` or a custom drag layer |
-| Web-styled scrollbars | Leave WebKit overlay scrollbars alone. Do **not** style them. |
-| Chunky 16px text | 13px base, per §3 |
-| Right-click showing a web menu | Suppress `contextmenu`; use Tauri's native menu API |
-| `⌘F` opening webview find | Intercept and route to your own search field |
-| Animations that overshoot | Short durations, subtle springs; see `ui-ux-spec.md` §1.5 |
-| No menu bar | Build a real one — see §5 |
+| Tell                           | Fix                                                                             |
+| ------------------------------ | ------------------------------------------------------------------------------- |
+| Text selection everywhere      | `user-select: none` globally; re-enable on transcripts and fields               |
+| Browser focus rings            | Custom ring per `ui-ux-spec.md` §1; never leave the default outline             |
+| Wrong cursor over UI           | `cursor: default`, not `pointer`, on buttons — macOS does not use a hand cursor |
+| Drag-and-drop ghost images     | `e.dataTransfer.setDragImage()` or a custom drag layer                          |
+| Web-styled scrollbars          | Leave WebKit overlay scrollbars alone. Do **not** style them.                   |
+| Chunky 16px text               | 13px base, per §3                                                               |
+| Right-click showing a web menu | Suppress `contextmenu`; use Tauri's native menu API                             |
+| `⌘F` opening webview find      | Intercept and route to your own search field                                    |
+| Animations that overshoot      | Short durations, subtle springs; see `ui-ux-spec.md` §1.5                       |
+| No menu bar                    | Build a real one — see §5                                                       |
 
 ```css
-*  { user-select: none; cursor: default; }
-input, textarea, [data-selectable] { user-select: text; cursor: text; }
+* {
+  user-select: none;
+  cursor: default;
+}
+input,
+textarea,
+[data-selectable] {
+  user-select: text;
+  cursor: text;
+}
 ```
 
 ---
@@ -232,12 +254,12 @@ identical, and none of §1, §2 or §5 renders on Linux at all.
 
 **What this means day to day:**
 
-| Works on Linux | macOS only |
-|---|---|
-| All layout, components, interaction, state | Vibrancy and materials |
-| The grid, virtualization, performance work | Traffic lights and titlebar overlay |
-| The entire Rust core, headless, with `cargo test` | Native menu bar behaviours |
-| Mock engines and fixtures | Font rendering and SF Pro metrics |
+| Works on Linux                                    | macOS only                          |
+| ------------------------------------------------- | ----------------------------------- |
+| All layout, components, interaction, state        | Vibrancy and materials              |
+| The grid, virtualization, performance work        | Traffic lights and titlebar overlay |
+| The entire Rust core, headless, with `cargo test` | Native menu bar behaviours          |
+| Mock engines and fixtures                         | Font rendering and SF Pro metrics   |
 
 **Therefore:**
 

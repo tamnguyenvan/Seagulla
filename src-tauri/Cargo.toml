@@ -1,0 +1,30 @@
+[package]
+name = "seagulla-app"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+
+[lib]
+name = "seagulla_app_lib"
+crate-type = ["staticlib", "cdylib", "rlib"]
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+tauri = { version = "2", features = ["macos-private-api"] }
+tauri-plugin-opener = "2"
+serde.workspace = true
+serde_json.workspace = true
+thiserror.workspace = true
+
+seagulla-core = { path = "../crates/seagulla-core" }
+seagulla-db = { path = "../crates/seagulla-db" }
+seagulla-export = { path = "../crates/seagulla-export" }
+seagulla-ingest = { path = "../crates/seagulla-ingest" }
+seagulla-platform = { path = "../crates/seagulla-platform" }
+seagulla-search = { path = "../crates/seagulla-search" }
+
+[target.'cfg(target_os = "macos")'.dependencies]
+window-vibrancy = "0.6"

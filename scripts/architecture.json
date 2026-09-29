@@ -1,0 +1,45 @@
+{
+  "_comment": "Authoritative crate graph. scripts/check_layering.py validates every Cargo.toml and every `use` against this file. Changing the architecture means changing this file first.",
+  "layers": [
+    {
+      "index": 0,
+      "name": "foundation",
+      "description": "No dependencies on other Seagulla crates."
+    },
+    { "index": 1, "name": "capability", "description": "Single-concern services over the domain." },
+    { "index": 2, "name": "engine", "description": "Composes capabilities into pipelines." },
+    { "index": 3, "name": "application", "description": "Executables and the Tauri shell." }
+  ],
+  "crates": {
+    "seagulla-core": { "layer": 0, "dependencies": [] },
+    "seagulla-db": { "layer": 1, "dependencies": ["seagulla-core"] },
+    "seagulla-media": { "layer": 1, "dependencies": ["seagulla-core"] },
+    "seagulla-ml": { "layer": 1, "dependencies": ["seagulla-core"] },
+    "seagulla-export": { "layer": 1, "dependencies": ["seagulla-core"] },
+    "seagulla-platform": { "layer": 1, "dependencies": ["seagulla-core"] },
+    "seagulla-ingest": {
+      "layer": 2,
+      "dependencies": ["seagulla-core", "seagulla-db", "seagulla-media", "seagulla-ml"]
+    },
+    "seagulla-search": {
+      "layer": 2,
+      "dependencies": ["seagulla-core", "seagulla-db", "seagulla-ml"]
+    },
+    "seagulla-cli": {
+      "layer": 3,
+      "dependencies": ["seagulla-core", "seagulla-db", "seagulla-ingest", "seagulla-search"]
+    },
+    "seagulla-app": {
+      "layer": 3,
+      "path": "src-tauri",
+      "dependencies": [
+        "seagulla-core",
+        "seagulla-db",
+        "seagulla-export",
+        "seagulla-ingest",
+        "seagulla-platform",
+        "seagulla-search"
+      ]
+    }
+  }
+}
