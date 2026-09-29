@@ -50,8 +50,9 @@ and where did it come from?* Anything that cannot answer that is deleted.
 | `accent` | `#4D9BE8` |
 | `accentSoft` | `rgba(77,155,232,0.18)` |
 
-Define every token in an **asset catalog** with both appearances. Never branch on
-`colorScheme` in view code — the catalog resolves it, including for Increase Contrast.
+Define every token once as a CSS custom property on `:root`, redefined under
+`[data-theme="dark"]`. Tailwind reads them through `@theme`. Never branch on theme in component
+code — the cascade resolves it, including for Increase Contrast.
 
 ### 1.3 Type — SF Pro
 
@@ -105,8 +106,9 @@ never check it individually.
 
 - `.windowStyle(.hiddenTitleBar)`, full-size content view, system corner radius
 - Default **1280×800**; minimum **1000×640**
-- **Sidebar:** `NSVisualEffectView`, material `.sidebar`, blending `.behindWindow` — this is
-  what produces the reference's translucency over the desktop
+- **Sidebar:** `NSVisualEffectMaterial::Sidebar` via the `window-vibrancy` crate — this is
+  what produces the reference's translucency over the desktop. See
+  [`macos-native-in-tauri.md`](macos-native-in-tauri.md) §2.
 - **Content area:** opaque `canvas`. Do *not* make it translucent; thumbnails need a stable
   background for accurate color judgement. The reference does the same.
 - **Toolbar:** 52pt, no system toolbar — a custom `HStack` so the centred title, chevrons and
@@ -130,7 +132,7 @@ never check it individually.
 - **Primary rows** — All Moments · Inbox · Starred · Tags · Trash
   - 28pt tall, radius `sm`, icon 16pt leading, `body` label, `caption`/`textTertiary` count trailing
   - Hover: `rgba(0,0,0,.04)` · Selected: `accentSoft` fill, `accent` icon, `textPrimary` label
-  - Selection background **slides** between rows via `matchedGeometryEffect` (`snappy`)
+  - Selection background **slides** between rows via a shared-element FLIP transition (`snappy`)
 - **Volumes section** — ours, not the reference's. This is the differentiator, on screen always.
   - 8pt status dot: `success` online, `textTertiary` offline
   - While indexing, the count is **replaced** by a 14pt determinate progress ring in `indexing`
@@ -176,8 +178,9 @@ filmstrip atlas for visible cards; never decode on hover.
 
 - Masonry, target column 240pt (min 180, max 320), user-adjustable via `⌘+` / `⌘-`
 - Gutter 12, balanced column heights
-- **Virtualized — mandatory.** Behind a protocol so `NSCollectionView` can replace
-  `LazyVGrid` when profiling demands it. Assume it will.
+- **Virtualized — mandatory.** Behind a narrow component interface so a canvas/WebGL renderer
+  can replace the DOM one when profiling demands it. In a webview this is the *only* escape
+  hatch, so the seam must exist from the first commit.
 - Modes: **Masonry** (default) · **Grid** (uniform) · **List** (row + inline filmstrip)
 
 ---
@@ -291,7 +294,7 @@ Seven effects, in implementation order. Each is cheap and each is visible.
    silver-halide heritage of the medium *and* eliminates gradient banding. Sub-pixel cost.
 4. **Progressive image loading.** Blur-hash-style 4×4 placeholder → full thumbnail cross-fade at
    `micro`. Never show an empty rectangle.
-5. **`MeshGradient` empty states** (macOS 15+). Soft coastal gradient behind onboarding, empty
+5. **Mesh-gradient empty states** (CSS conic/radial layers). Soft coastal gradient behind onboarding, empty
    library and no-results. Modern, and unmistakably 2026.
 6. **Scroll-condensing header.** Content title shrinks `title2` → `headline` and a blur layer
    fades in behind the toolbar as the grid scrolls past 40pt.
@@ -413,14 +416,25 @@ you cannot see is throughput you cannot defend.
 
 ## 14. Implementation notes
 
-- **`DesignSystem` is a module**, built in Phase 1 with its own gallery app showing every
-  component in every state, both appearances, both motion settings. Components land in the
-  gallery before they land in the product.
-- **Where AppKit wins:** the grid (`NSCollectionView` escape hatch behind a protocol), the video
-  surface (`AVPlayerLayer`), anything needing precise scroll-offset control, and
-  `NSVisualEffectView` materials.
-- **No magic numbers in view code.** Every value resolves from a token.
-- **Snapshot-test every component state** in both appearances. There are roughly 60 states in
-  §4 and §5 alone; manual verification will not hold.
-- Card, grid and inspector are built against `MockSearchEngine` with realistic latency,
-  progressive results and a 2% failure rate from the first commit. See `implementation-plan.md` §9.
+- **`src/lib/design` is the token layer**, built in Phase 1 with its own component gallery route
+  showing every component in every state, both appearances, both motion settings. Components land
+  in the gallery before they land in the product.
+- **No magic numbers in component code.** Every value resolves from a Tailwind token that maps to
+  a CSS custom property.
+- **The grid renderer is swappable.** `MomentGrid` exposes a narrow interface — items, viewport,
+  selection, scroll position — so a canvas/WebGL implementation can replace the virtualized DOM
+  one without touching callers. See [`implementation-plan.md`](implementation-plan.md) §5.
+- **Thumbnails are served over a custom Tauri protocol**, never base64 data URLs. Data URLs
+  duplicate every image into the JS heap and will exhaust memory long before 100k moments.
+- **Filmstrips are sprite atlases** — one image per moment, positioned with `background-position`,
+  not sixteen requests per hover.
+- **Types cross the IPC boundary once.** Rust structs derive `serde` and `ts-rs`; TypeScript
+  definitions are generated at build time. Hand-written duplicates drift, and drift surfaces as a
+  runtime error inside a webview.
+- **Snapshot-test every component state** in both appearances. §4 and §5 alone specify roughly 60
+  states; manual verification will not hold.
+- **Native feel is a separate concern** from visual design. [`macos-native-in-tauri.md`](macos-native-in-tauri.md)
+  owns window chrome, vibrancy, typography metrics, menus, and the specific tells that give a web
+  UI away.
+- Card, grid and inspector are built against the mock engines — realistic latency, progressive
+  results, 2% failure rate — from the first commit. See [`implementation-plan.md`](implementation-plan.md) §8.
