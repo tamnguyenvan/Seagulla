@@ -42,7 +42,13 @@
     onfocus={() => (focused = true)}
     onblur={() => (focused = false)}
     onkeydown={(e) => {
-      if (e.key === 'Escape') {
+      // Handled explicitly rather than relying on the form's implicit submission,
+      // which is inconsistent across webviews — see docs/macos-native-in-tauri.md §6.
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        onsearch?.(draft);
+      } else if (e.key === 'Escape') {
+        e.preventDefault();
         draft = '';
         onclear?.();
         input?.blur();
